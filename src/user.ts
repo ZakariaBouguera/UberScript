@@ -26,28 +26,30 @@ export class User {
     this.orders = []
   }
 
-  orderMeal(meal: Meal): void {
-    // vérification si la personne a assez d'argent 
-    if (meal.price > this.wallet) {
-      throw new TropPauvreErreur(
-        `ta pas de sous ! "${meal.name}"`,
-        this.wallet,        
-        meal.price
-      )
-    }
-    this.wallet -= meal.price // retirer le montant du wallet
+  orderMeals(meals: Meal[]): void {
+  // meals est un tableau, donc on calcule le total avec reduce
+  const total = meals.reduce((sum, meal) => sum + meal.price, 0)
 
-    const newOrder: Order = {
-      id: Date.now(),
-      meals: [meal],       
-      total: meal.price
-    }
-
-    this.orders.push(newOrder) // on ajoute la commande au tableau
-
-    //localStorage permettant de garder les données après la recherage de la page
-    this.saveOrders()
+  // On compare le total (pas meals.price qui n'existe pas sur un tableau)
+  if (total > this.wallet) {
+    throw new TropPauvreErreur(
+      `ta pas de sous !`,
+      this.wallet,
+      total
+    )
   }
+
+  this.wallet -= total // on retire le total (pas meals.price)
+
+  const newOrder: Order = {
+    id: Date.now(),
+    meals: meals,   // meals est déjà un tableau, pas besoin de [meals]
+    total: total
+  }
+
+  this.orders.push(newOrder)
+  this.saveOrders()
+}
   saveOrders(): void {
     localStorage.setItem(`orders_${this.id}`, JSON.stringify(this.orders))
   }
